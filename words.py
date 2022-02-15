@@ -6,13 +6,21 @@ import json, shutil
 wdict = {}
 with open('dict.json') as json_file:
     wdict = json.load(json_file)
+print("Word dictionary loaded")
 
 # Load word frequency dictionary from file
 freq = {}
 with open('freq.json') as json_file:
     freq = json.load(json_file)
+print("Word frequency loaded")
 
-# Create a dataframe for each word
+# Load match file file
+match = {}
+with open('match.json') as json_file:
+    match = json.load(json_file)
+print("Match file loaded")
+
+# Create a dataframe for the wordlist
 words = pd.DataFrame(wdict, columns = ['word'])
 
 # Function to generate a score for a word
