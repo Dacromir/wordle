@@ -1,16 +1,23 @@
 import pandas as pd
-import json, shutil, math
+import json, shutil, math, sys
 
 
 # Load wordle word dictionary from file
 wdict = []
+full_dict = []
 with open('dict.json') as json_file:
     wdict = json.load(json_file)
+
+full_dict = wdict.copy()
+mode = "hard"
+if len(sys.argv) > 1:
+    if sys.argv[1] == "easy":
+        mode = "easy"
 
 size = len(wdict)
 matches = {}
 
-def gen_pattern(word, input):
+def gen_pattern(word, guess):
     chars = {}
     pattern = "-----"
     for char in word:
@@ -21,25 +28,31 @@ def gen_pattern(word, input):
 
     # Green pass
     for n in range(5):
-        if word[n] == input[n]:
+        if word[n] == guess[n]:
             pattern = pattern[:n] + "G" + pattern[(n+1):]
-            chars[input[n]] -= 1
+            chars[guess[n]] -= 1
     
     # Yellow pass
     for n in range(5):
-        if pattern[n] == "-" and input[n] in chars:
-            if chars[input[n]] > 0:
+        if pattern[n] == "-" and guess[n] in chars:
+            if chars[guess[n]] > 0:
                 pattern = pattern[:n] + "Y" + pattern[(n+1):]
-                chars[input[n]] -= 1
+                chars[guess[n]] -= 1
         
     return pattern
 
 def gen_matches():
     matches = {}
-    for word in wdict:
-        matches[word] = {}
-        for input in wdict:
-            matches[word][input] = gen_pattern(word, input)
+    if mode == "easy":
+        for word in full_dict:
+            matches[word] = {}
+            for guess in wdict:
+                matches[word][guess] = gen_pattern(word, guess)
+    else:
+        for word in wdict:
+            matches[word] = {}
+            for guess in wdict:
+                matches[word][guess] = gen_pattern(word, guess)
     
     return matches
 
@@ -64,15 +77,17 @@ def gen_score(word):
 
 def gen_recommendation():
     # Create dataframe
-    words = pd.DataFrame(wdict, columns = ['word'])
+    if mode == "easy":
+        words = pd.DataFrame(full_dict, columns = ['word'])
+    else:
+        words = pd.DataFrame(wdict, columns = ['word'])
 
     # Apply Score
     words['score'] = words.apply(lambda x: gen_score(x['word']), axis=1)
-
-    # Sort words by highest score
     words = words.sort_values(by=['score'], ascending=False)
 
-    return words.at[0, 'word']
+    # Output best word
+    return words.at[words['score'].idxmin(), 'word']
 
 def filter_dict(guess, result):
     new_dict = []
@@ -91,7 +106,7 @@ wdict = filter_dict(guess,result)
 matches = gen_matches()
 size = len(wdict)
 
-for n in range(5):
+while True:
     if size <= 100:
         print("\nWords remaining: " + str(size))
         row_count = 0
@@ -128,5 +143,6 @@ for n in range(5):
         break
 
     wdict = filter_dict(guess,result)
+    matches = gen_matches()
     size = len(wdict)
     
