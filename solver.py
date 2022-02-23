@@ -1,6 +1,7 @@
 import pandas as pd
 import json, shutil, math, sys
 
+### A script to solve wordle automatically
 
 # Load wordle word dictionary from file
 wdict = []
@@ -17,6 +18,7 @@ if len(sys.argv) > 1:
 size = len(wdict)
 matches = {}
 
+# Generate the result of a guess for a given word
 def gen_pattern(word, guess):
     chars = {}
     pattern = "-----"
@@ -41,6 +43,7 @@ def gen_pattern(word, guess):
         
     return pattern
 
+# Generate all possible matches for remaining words
 def gen_matches():
     matches = {}
     if mode == "easy":
@@ -56,6 +59,7 @@ def gen_matches():
     
     return matches
 
+# Generate expected bits of entropy for a given word
 def gen_score(word):
     patterns = {}
 
@@ -70,13 +74,16 @@ def gen_score(word):
     score = 0
 
     # Sum up bits of entropy
-    for p in patterns.values():
-        score += (p/size) * math.log((size/p),2)
+    for p, n in patterns.items():
+        score += (n/size) * math.log((size/n),2)
     
     return score
 
 def gen_recommendation():
     # Create dataframe
+    if len(wdict) == 1:
+        return wdict[0]
+    
     if mode == "easy":
         words = pd.DataFrame(full_dict, columns = ['word'])
     else:
@@ -85,10 +92,12 @@ def gen_recommendation():
     # Apply Score
     words['score'] = words.apply(lambda x: gen_score(x['word']), axis=1)
     words = words.sort_values(by=['score'], ascending=False)
+    # print(words.head(10))
 
     # Output best word
     return words.at[words['score'].idxmax(), 'word']
 
+# Filter out words that are no longer valid
 def filter_dict(guess, result):
     new_dict = []
     for word in wdict:
@@ -97,8 +106,8 @@ def filter_dict(guess, result):
             new_dict.append(word)
     return new_dict
 
-print ("Words remaining: " + str(size))
-print ("Recommended guess: TARES")
+print("Result key: \"G\" = Green, \"Y\" = Yellow, \"-\" = Gray\n")
+print("Words remaining: " + str(size))
 guess = input("Guess:  ").lower()
 result = input("Result: ").upper()
 

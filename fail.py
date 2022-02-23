@@ -1,6 +1,7 @@
 import pandas as pd
 import json, shutil, math, sys
 
+### A script designed to gather as little information as possible
 
 # Load wordle word dictionary from file
 wdict = []

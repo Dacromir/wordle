@@ -1,6 +1,7 @@
 import pandas as pd
 import json, shutil, math
 
+### A script to list out all remaining possible words (without offering suggestions)
 
 # Load wordle word dictionary from file
 wdict = []
@@ -62,17 +63,17 @@ size = len(wdict)
 for n in range(5):
     print("\nWords remaining: " + str(size))
     row_count = 0
-    row_max = 15
+    row_max = 10
     row = ""
     for n in range(size):
         if row_count == 0:
             row = "    " + wdict[n]
             row_count = 1
         elif row_count < (row_max - 1):
-            row += " " + wdict[n]
+            row += ", " + wdict[n]
             row_count += 1
         elif row_count == (row_max - 1):
-            row += " " + wdict[n]
+            row += ", " + wdict[n]
             print(row)
             row = ""
             row_count = 0
